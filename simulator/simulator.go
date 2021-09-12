@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -44,6 +45,7 @@ func NewWorld(graph map[string][]string, n int, alienLocation map[int]string) (*
 		Graph:         graph,
 		RemSimulation: MaxSimulation,
 		AlienLocation: make(map[int]string),
+		CityDestroyed: make(map[string]bool),
 	}
 	// Number of aliens can be greater than the number of cities.
 	// Iterate until all aliens are assigned a city each.
@@ -85,14 +87,20 @@ func (w *worldX) OneEpoch() ([]string, error) {
 		}
 		cityInvaderCnt[curCity]--
 		cityInvaderCnt[nxtCity]++
-		if cityInvaderCnt[nxtCity] > 1 {
-			fightZones[nxtCity] = append(fightZones[nxtCity], alien)
+		// If curCity == nxtCity increase the count by 1
+		if curCity == nxtCity {
+			cityInvaderCnt[nxtCity]++
 		}
+
+		fightZones[nxtCity] = append(fightZones[nxtCity], alien)
 	}
 
 	msg := make([]string, 0)
 	// Destroy cities and aliens where more than one alien collide.
 	for city, aliens := range fightZones {
+		if len(aliens) == 1 {
+			continue
+		}
 		if w.CityDestroyed[city] {
 			return nil, fmt.Errorf("city %s already destroyed", city)
 		}
@@ -101,6 +109,7 @@ func (w *worldX) OneEpoch() ([]string, error) {
 		for _, a := range aliens {
 			delete(w.AlienLocation, a)
 		}
+		sort.Ints(aliens)
 		msg = append(msg, fmt.Sprintf("%s destroyed by %v", city, aliens))
 	}
 	return msg, nil
