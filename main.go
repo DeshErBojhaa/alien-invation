@@ -37,10 +37,12 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	err = sim.Simulate()
 	if !errors.Is(err, simulator.ErrMaxIterationReached) && !errors.Is(err, simulator.ErrNoAlienAlive) {
 		log.Fatalln(err)
 	}
+
 	fmt.Println("Report: ------------------------")
 	logger := log.New(os.Stdout, "", 0)
 	w.Report(logger, sim.GetDestroyedCities())

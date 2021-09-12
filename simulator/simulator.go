@@ -99,7 +99,11 @@ func (s *Simulator) Simulate() error {
 	}
 }
 
-// oneEpoch simulates moves made by all aliens.
+// oneEpoch simulates the next move made by all living aliens.
+// First, all aliens go to a randomly picked adjacent city
+// which is not destroyed. If an alien can not make a move,
+// it stays put. After every living aliens have made their move,
+// we destroy colliding aliens and their cities.
 func (s *Simulator) oneEpoch() ([]string, error) {
 	if s.remIteration <= 0 {
 		return nil, ErrMaxIterationReached
@@ -152,8 +156,8 @@ func (s *Simulator) oneEpoch() ([]string, error) {
 }
 
 // alienMove return the next city for an alien from a list of
-// valid cities. If no valid city is found, i.e. alien is trapped
-// it return the current city of the alien.
+// valid neighbour cities. If no valid city is found, i.e. alien
+// is trapped it return the current city for that alien.
 func (s *Simulator) alienMove(alien int) (string, error) {
 	curCity := s.alienLocation[alien]
 	if curCity == "" {

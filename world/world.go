@@ -47,6 +47,9 @@ func CreateFromFile(f io.ReadCloser) *World {
 	return world
 }
 
+// GetConnections returns a simpler version of the
+// world. Where connections are represented as graph of
+// adjacent vectors.
 func (w *World) GetConnections() map[string][]string {
 	conn := make(map[string][]string)
 	for cityName, neighbours := range w.connections {
@@ -63,7 +66,7 @@ func (w *World) GetConnections() map[string][]string {
 			conn[neighbourName] = append(conn[neighbourName], cityName)
 		}
 	}
-	// De-duplicate neighbours
+	// De-duplicate neighbours.
 	for cityName, neighbours := range conn {
 		uniqueNeighbours := make(map[string]bool)
 		for _, name := range neighbours {
