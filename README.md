@@ -30,6 +30,7 @@
 
 ---
 [![Go Report Card](https://goreportcard.com/badge/github.com/DeshErBojhaa/alien-invation)](https://goreportcard.com/report/github.com/DeshErBojhaa/alien-invation)
+![example workflow](https://github.com/DeshErBojhaa/alien-invation/actions/workflows/go.yml/badge.svg)
 ### Assumptions
 - Input file is valid. If `Foo north=Bar` is true then `Bar south=Foo` must hold true.
 - City names do not contain special characters.
