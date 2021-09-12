@@ -1,4 +1,5 @@
 codecov:
+  token: c86377bf-486b-40bc-86a7-5463987aa752
   require_ci_to_pass: yes
 
 coverage:
@@ -13,6 +14,7 @@ parsers:
       loop: yes
       method: no
       macro: no
+
 
 comment:
   layout: "reach,diff,flags,files,footer"
