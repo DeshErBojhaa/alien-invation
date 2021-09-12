@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// World is the representation of the worldX mentioned
+// in the problem description.
 type World struct {
 	connections map[string][]city
 	inputOrder  []string
@@ -19,6 +21,7 @@ type city struct {
 	orientation string
 }
 
+// CreateFromFile return the World from a reader.
 func CreateFromFile(f io.ReadCloser) *World {
 	defer func() { _ = f.Close() }()
 	world := &World{
@@ -82,6 +85,10 @@ func (w *World) GetConnections() map[string][]string {
 	return conn
 }
 
+// Report is called after the simulation is finished.
+// It prints all the remaining cities with their remaining
+// neighbours. If a city do not have a neighbour no more, it
+// prints ---
 func (w *World) Report(log *log.Logger, cityDestroyed map[string]bool) {
 	for _, curName := range w.inputOrder {
 		if cityDestroyed[curName] {
