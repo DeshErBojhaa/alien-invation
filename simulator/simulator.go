@@ -22,10 +22,10 @@ var (
 )
 
 type worldX struct {
-	graph         map[string][]string
-	cityDestroyed map[string]bool
-	alienLocation map[int]string
-	remSimulation int
+	Graph         map[string][]string
+	CityDestroyed map[string]bool
+	AlienLocation map[int]string
+	RemSimulation int
 }
 
 func init() {
@@ -34,24 +34,29 @@ func init() {
 
 func NewWorld(graph map[string][]string, n int, alienLocation map[int]string) (*worldX, error) {
 	if n < 0 || n > MaxAliens {
-		return nil, fmt.Errorf("alien count sould be in range [0, 10,000], found %d", n)
+		return nil, fmt.Errorf("alien count should be in range [0, 10,000], found %d", n)
 	}
+	if graph == nil || (len(graph) == 0 && n > 0) {
+		return nil, fmt.Errorf("world must contain at least one city")
+	}
+
 	world := &worldX{
-		graph: graph,
-		remSimulation: MaxSimulation,
+		Graph:         graph,
+		RemSimulation: MaxSimulation,
+		AlienLocation: make(map[int]string),
 	}
 	// Number of aliens can be greater than the number of cities.
 	// Iterate until all aliens are assigned a city each.
 	//
 	// Use map's random traversal order to get a city.
-	if alienLocation == nil {
+	if alienLocation != nil {
+		world.AlienLocation = alienLocation
+	} else {
 		for i := n; i > 0; i-- {
 			for k := range graph {
-				world.alienLocation[i] = k
+				world.AlienLocation[i] = k
 			}
 		}
-	} else {
-		world.alienLocation = alienLocation
 	}
 
 	return world, nil
@@ -59,12 +64,12 @@ func NewWorld(graph map[string][]string, n int, alienLocation map[int]string) (*
 
 // OneEpoch simulates moves made by all aliens.
 func (w *worldX) OneEpoch() ([]string, error) {
-	if w.remSimulation <= 0 {
+	if w.RemSimulation <= 0 {
 		return nil, ErrSimulationEnds
 	}
-	w.remSimulation--
+	w.RemSimulation--
 
-	if len(w.alienLocation) == 0 {
+	if len(w.AlienLocation) == 0 {
 		return nil, ErrNoAlienAlive
 	}
 
@@ -73,7 +78,7 @@ func (w *worldX) OneEpoch() ([]string, error) {
 	// Cities that end up with more than one alien after this epoch.
 	fightZones := make(map[string][]int)
 
-	for alien, curCity := range w.alienLocation {
+	for alien, curCity := range w.AlienLocation {
 		nxtCity, err := w.AlienMove(alien)
 		if err != nil {
 			return nil, err
@@ -88,13 +93,13 @@ func (w *worldX) OneEpoch() ([]string, error) {
 	msg := make([]string, 0)
 	// Destroy cities and aliens where more than one alien collide.
 	for city, aliens := range fightZones {
-		if w.cityDestroyed[city] {
+		if w.CityDestroyed[city] {
 			return nil, fmt.Errorf("city %s already destroyed", city)
 		}
-		w.cityDestroyed[city] = true
+		w.CityDestroyed[city] = true
 		// Make aliens unavailable for subsequent epoch.
 		for _, a := range aliens {
-			delete(w.alienLocation, a)
+			delete(w.AlienLocation, a)
 		}
 		msg = append(msg, fmt.Sprintf("%s destroyed by %v", city, aliens))
 	}
@@ -105,17 +110,17 @@ func (w *worldX) OneEpoch() ([]string, error) {
 // valid cities. If no valid city is found, i.e. alien is trapped
 // it return the current city of the alien.
 func (w *worldX) AlienMove(alien int) (string, error) {
-	curCity := w.alienLocation[alien]
+	curCity := w.AlienLocation[alien]
 	if curCity == "" {
 		return "", fmt.Errorf("current location for alien %d not found", alien)
 	}
-	if w.cityDestroyed[curCity] {
+	if w.CityDestroyed[curCity] {
 		return "", fmt.Errorf("city %s is already destroyed", curCity)
 	}
 
 	validNeighbours := make([]string, 0)
-	for _, neighbour := range w.graph[curCity] {
-		if w.cityDestroyed[neighbour] {
+	for _, neighbour := range w.Graph[curCity] {
+		if w.CityDestroyed[neighbour] {
 			continue
 		}
 		validNeighbours = append(validNeighbours, neighbour)
