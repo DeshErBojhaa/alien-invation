@@ -16,7 +16,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fileName := fmt.Sprintf("%s/data2.txt", dir)
+	fileName := fmt.Sprintf("%s/data.txt", dir)
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalln(err)
@@ -42,5 +42,6 @@ func main() {
 		log.Fatalln(err)
 	}
 	fmt.Println("Report: ------------------------")
-	w.Report(sim.GetDestroyedCities())
+	logger := log.New(os.Stdout, "", 0)
+	w.Report(logger, sim.GetDestroyedCities())
 }

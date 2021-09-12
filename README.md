@@ -1,4 +1,5 @@
 ### Assumptions
+- Input file is valid. If `Foo north=Bar` is true then `Bar south=Foo` must hold true.
 - Number of aliens can be at most 10000.
 - Dataset is small. All the cities and the roads can be stored in memory of a single machine.
 - Roads are bidirectional.

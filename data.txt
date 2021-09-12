@@ -3,3 +3,7 @@ B south=A west=X east=Y
 X south=E
 E east=A south=M
 C west=M
+H east=X south=F west=I
+F south=G west=J east=E
+G west=K east=M
+J north=I south=K

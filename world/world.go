@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
+	"sort"
 	"strings"
 )
 
@@ -71,20 +73,21 @@ func (w *World) GetConnections() map[string][]string {
 		for name := range uniqueNeighbours {
 			list = append(list, name)
 		}
+		sort.Strings(list)
 		conn[cityName] = list
 	}
 	return conn
 }
 
-func (w *World) Report(destroyedCities map[string]bool) {
+func (w *World) Report(log *log.Logger, cityDestroyed map[string]bool) {
 	for _, curName := range w.inputOrder {
-		if destroyedCities[curName] {
+		if cityDestroyed[curName] {
 			continue
 		}
 		neighbours := w.connections[curName]
 		var sb strings.Builder
 		for _, city := range neighbours {
-			if destroyedCities[city.name] {
+			if cityDestroyed[city.name] {
 				continue
 			}
 			sb.WriteString(fmt.Sprintf(" %s=%s", city.orientation, city.name))
@@ -92,6 +95,6 @@ func (w *World) Report(destroyedCities map[string]bool) {
 		if sb.Len() == 0 {
 			sb.WriteString(" ---")
 		}
-		fmt.Println(curName, sb.String())
+		log.Println(curName, sb.String())
 	}
 }
