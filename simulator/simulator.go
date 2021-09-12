@@ -11,7 +11,12 @@ import (
 )
 
 const (
-	MaxAliens    = 10000
+	// MaxAliens is the maximum number of aliens a simulation can handle.
+	// Bigger numbers can have liner increase in simulation runtime. And
+	// Quadratic increase in initial assignment.
+	MaxAliens = 10000
+	// MaxIteration is the max number of epochs we run. This is placed to
+	// prevent live lock.
 	MaxIteration = 10000
 )
 
@@ -27,6 +32,14 @@ var (
 	ErrNoAlienAlive = errors.New("no alien alive")
 )
 
+// Simulator runs an alien invasion. It holds a stripped down
+// representation of the worldX, where we only have cities
+// represented as a graph using adjacent vector.
+//
+// cityDestroyed is a flag we check when calculating next move
+// for alive aliens.
+// alienLocation holds current location of every alive aliens.
+// when aliens die, we delete the reference from this map.
 type Simulator struct {
 	graph         map[string][]string
 	cityDestroyed map[string]bool
@@ -39,6 +52,9 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
+// NewSimulator return a simulator. It can take alienLocation
+// as parameter, so we can inject the initial locations of
+// aliens to have deterministic tests.
 func NewSimulator(graph map[string][]string, n int, alienLocation map[int]string) (*Simulator, error) {
 	if n < 0 || n > MaxAliens {
 		return nil, fmt.Errorf("alien count should be in range [0, 10,000], found %d", n)
@@ -185,6 +201,8 @@ func (s *Simulator) setLogger(log *log.Logger) {
 	s.log = log
 }
 
+// GetDestroyedCities return a map that returns true is
+// a city is destroyed and false otherwise.
 func (s *Simulator) GetDestroyedCities() map[string]bool {
 	return s.cityDestroyed
 }
