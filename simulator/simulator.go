@@ -3,7 +3,9 @@ package simulator
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"time"
 )
@@ -26,10 +28,11 @@ var (
 )
 
 type Simulator struct {
-	Graph         map[string][]string
-	CityDestroyed map[string]bool
-	AlienLocation map[int]string
-	RemIteration  int
+	graph         map[string][]string
+	cityDestroyed map[string]bool
+	alienLocation map[int]string
+	remIteration  int
+	log           *log.Logger
 }
 
 func init() {
@@ -45,22 +48,23 @@ func NewSimulator(graph map[string][]string, n int, alienLocation map[int]string
 	}
 
 	world := &Simulator{
-		Graph:         graph,
-		RemIteration:  MaxIteration,
-		AlienLocation: make(map[int]string),
-		CityDestroyed: make(map[string]bool),
+		graph:         graph,
+		remIteration:  MaxIteration,
+		alienLocation: make(map[int]string),
+		cityDestroyed: make(map[string]bool),
+		log:           log.New(os.Stdout, "", 0),
 	}
 	// Number of aliens can be greater than the number of cities.
 	// Iterate until all aliens are assigned a city each.
 	//
 	// Use map's random traversal order to get a city.
 	if alienLocation != nil {
-		world.AlienLocation = alienLocation
+		world.alienLocation = alienLocation
 	} else {
 		alien, i := n, 1
 		for alien > 0 {
 			for k := range graph {
-				world.AlienLocation[i] = k
+				world.alienLocation[i] = k
 				i++
 				alien--
 				if alien <= 0 {
@@ -80,7 +84,7 @@ func NewSimulator(graph map[string][]string, n int, alienLocation map[int]string
 //   4. Fatal error
 func (s *Simulator) Simulate() error {
 	for {
-		msg, err := s.OneEpoch()
+		msg, err := s.oneEpoch()
 		if errors.Is(err, ErrMaxIterationReached) || errors.Is(err, ErrNoAlienAlive) {
 			return fmt.Errorf("simulation ends: %w", err)
 		}
@@ -89,20 +93,20 @@ func (s *Simulator) Simulate() error {
 		}
 		if msg != nil && len(msg) > 0 {
 			for _, m := range msg {
-				fmt.Println(m)
+				s.log.Println(m)
 			}
 		}
 	}
 }
 
-// OneEpoch simulates moves made by all aliens.
-func (s *Simulator) OneEpoch() ([]string, error) {
-	if s.RemIteration <= 0 {
+// oneEpoch simulates moves made by all aliens.
+func (s *Simulator) oneEpoch() ([]string, error) {
+	if s.remIteration <= 0 {
 		return nil, ErrMaxIterationReached
 	}
-	s.RemIteration--
+	s.remIteration--
 
-	if len(s.AlienLocation) == 0 {
+	if len(s.alienLocation) == 0 {
 		return nil, ErrNoAlienAlive
 	}
 
@@ -111,8 +115,8 @@ func (s *Simulator) OneEpoch() ([]string, error) {
 	// Cities that end up with more than one alien after this epoch.
 	fightZones := make(map[string][]int)
 
-	for alien, curCity := range s.AlienLocation {
-		nxtCity, err := s.AlienMove(alien)
+	for alien, curCity := range s.alienLocation {
+		nxtCity, err := s.alienMove(alien)
 		if err != nil {
 			return nil, err
 		}
@@ -132,13 +136,13 @@ func (s *Simulator) OneEpoch() ([]string, error) {
 		if len(aliens) < 2 {
 			continue
 		}
-		if s.CityDestroyed[city] {
+		if s.cityDestroyed[city] {
 			return nil, fmt.Errorf("city %s already destroyed", city)
 		}
-		s.CityDestroyed[city] = true
+		s.cityDestroyed[city] = true
 		// Make aliens unavailable for subsequent epoch.
 		for _, a := range aliens {
-			delete(s.AlienLocation, a)
+			delete(s.alienLocation, a)
 		}
 		sort.Ints(aliens)
 		msg = append(msg, fmt.Sprintf("%s destroyed by alien %v!", city, aliens))
@@ -146,21 +150,21 @@ func (s *Simulator) OneEpoch() ([]string, error) {
 	return msg, nil
 }
 
-// AlienMove return the next city for an alien from a list of
+// alienMove return the next city for an alien from a list of
 // valid cities. If no valid city is found, i.e. alien is trapped
 // it return the current city of the alien.
-func (s *Simulator) AlienMove(alien int) (string, error) {
-	curCity := s.AlienLocation[alien]
+func (s *Simulator) alienMove(alien int) (string, error) {
+	curCity := s.alienLocation[alien]
 	if curCity == "" {
 		return "", fmt.Errorf("current location for alien %d not found", alien)
 	}
-	if s.CityDestroyed[curCity] {
+	if s.cityDestroyed[curCity] {
 		return "", fmt.Errorf("city %s is already destroyed", curCity)
 	}
 
 	validNeighbours := make([]string, 0)
-	for _, neighbour := range s.Graph[curCity] {
-		if s.CityDestroyed[neighbour] {
+	for _, neighbour := range s.graph[curCity] {
+		if s.cityDestroyed[neighbour] {
 			continue
 		}
 		validNeighbours = append(validNeighbours, neighbour)
@@ -170,6 +174,10 @@ func (s *Simulator) AlienMove(alien int) (string, error) {
 		return curCity, nil
 	}
 	return randomSelect(validNeighbours), nil
+}
+
+func (s *Simulator) setLogger(log *log.Logger) {
+	s.log = log
 }
 
 func randomSelect(cities []string) string {
