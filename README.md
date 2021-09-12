@@ -7,3 +7,8 @@
 
 ### Algorithmic Assumptions
 - It only matters if two city are connected. The connection orientation is not important.
+
+
+### Phylosophy
+- Keep things simple. Explicitly! I used `int` in place of `int32` because what are the ods that we run this application on a machine where int word size is not 8? And does that affect the correctness? I do understand the machine architecture and know when to fix the byte size for int.
+- 

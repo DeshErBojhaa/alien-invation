@@ -57,14 +57,42 @@ func NewSimulator(graph map[string][]string, n int, alienLocation map[int]string
 	if alienLocation != nil {
 		world.AlienLocation = alienLocation
 	} else {
-		for i := n; i > 0; i-- {
+		alien, i := n, 1
+		for alien > 0 {
 			for k := range graph {
 				world.AlienLocation[i] = k
+				i++
+				alien--
+				if alien <= 0 {
+					break
+				}
 			}
 		}
 	}
 
 	return world, nil
+}
+
+// Simulate runs until one of the condition met
+//   1. All aliens are destroyed
+//   2. All cities are destroyed, which is also covered by case 1
+//   3. Max iteration reached
+//   4. Fatal error
+func (s *Simulator) Simulate() error {
+	for {
+		msg, err := s.OneEpoch()
+		if errors.Is(err, ErrMaxIterationReached) || errors.Is(err, ErrNoAlienAlive) {
+			return fmt.Errorf("simulation ends: %w", err)
+		}
+		if err != nil {
+			return fmt.Errorf("unexpected error: %w", err)
+		}
+		if msg != nil && len(msg) > 0 {
+			for _, m := range msg {
+				fmt.Println(m)
+			}
+		}
+	}
 }
 
 // OneEpoch simulates moves made by all aliens.
@@ -101,7 +129,7 @@ func (s *Simulator) OneEpoch() ([]string, error) {
 	msg := make([]string, 0)
 	// Destroy cities and aliens where more than one alien collide.
 	for city, aliens := range fightZones {
-		if len(aliens) == 1 {
+		if len(aliens) < 2 {
 			continue
 		}
 		if s.CityDestroyed[city] {
@@ -113,7 +141,7 @@ func (s *Simulator) OneEpoch() ([]string, error) {
 			delete(s.AlienLocation, a)
 		}
 		sort.Ints(aliens)
-		msg = append(msg, fmt.Sprintf("%s destroyed by %v", city, aliens))
+		msg = append(msg, fmt.Sprintf("%s destroyed by alien %v!", city, aliens))
 	}
 	return msg, nil
 }
