@@ -1,0 +1,5 @@
+A north=B south=C east=D west=E
+B south=A west=X east=Y
+X south=E
+E east=A south=M
+C west=M
