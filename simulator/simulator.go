@@ -128,6 +128,7 @@ func (s *Simulator) oneEpoch() ([]string, error) {
 		}
 
 		fightZones[nxtCity] = append(fightZones[nxtCity], alien)
+		s.alienLocation[alien] = nxtCity
 	}
 
 	msg := make([]string, 0)
@@ -178,6 +179,10 @@ func (s *Simulator) alienMove(alien int) (string, error) {
 
 func (s *Simulator) setLogger(log *log.Logger) {
 	s.log = log
+}
+
+func (s *Simulator) GetDestroyedCities() map[string]bool {
+	return s.cityDestroyed
 }
 
 func randomSelect(cities []string) string {
